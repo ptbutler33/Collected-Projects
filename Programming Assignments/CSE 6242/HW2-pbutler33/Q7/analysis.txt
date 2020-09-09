@@ -1,0 +1,24 @@
+1. Ease to develop
+	R: very easy to develop, usually requires only a few lines of code
+	Tableau: easy to develop as well, may take a few minutes
+	D3: difficult to develop, requires more time and coding background
+
+2. Ease to maintain
+	R: more difficult to adjust for new requirements/data
+	Tableau: easy to maintain and adjust for changes, has direct access to servers/databases
+	D3: easy to maintain and adjust for new requirements/data
+
+3. Usability
+	R: poor usability unless using R Shiny, base package and ggplot have limited visualization options
+	Tabbleau: good usability, many visualization options such as interactive dashboards
+	D3: excellent usability for end users, can make very nice interactive visualizations
+
+4. Scalability
+	R: not the best scalability, best suited for small/medium size datasets
+	Tableau: optimized to analyze large data quickly, much better scalability
+	D3: poor scalability unless the data analysis work is done separately (say, in SQL)
+
+5. System Requirements
+	R: minimal system requirements, free to install and use
+	Tableau: higher system requirements, requires license/subscription to use
+	D3: highest system requirements (e.g. 2 GB RAM/4 GB recommended) but free to use

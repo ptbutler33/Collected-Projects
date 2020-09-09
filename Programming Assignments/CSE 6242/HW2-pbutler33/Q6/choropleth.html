@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<meta charset = "utf-8">
+<style>
+
+.counties {
+  fill: none;
+}
+
+.state-borders {
+  fill: none;
+  stroke: #fff;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.d3-tip {
+  line-height: 1;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+  </style>
+
+  <body>
+  </body>
+
+  <script src = "../lib/d3.v5.min.js"></script>
+  <script src = "../lib/topojson.v2.min.js"></script>
+  <script src = "../lib/d3-tip.min.js"></script>
+
+<script>
+
+var margin = {top: 120, right: 70, bottom: 150, left: 30},
+  width = 900 - margin.left - margin.right,
+  height = 600 - margin.top - margin.bottom;
+
+var svg = d3.select("body")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+
+var projection = d3.geoAlbersUsa()
+    .translate([width/2, height/2])
+    .scale([1000]);
+
+var path = d3.geoPath(projection); //path generator to convert GeoJSON to path
+
+var cScale = d3.scaleQuantize()
+            .range(['#fff5eb','#fee6ce','#fdd0a2','#fdae6b','#fd8d3c','#f16913','#d94801','#a63603','#7f2704']);
+
+Promise.all([
+  d3.csv("state-earthquakes.csv"),
+  d3.json("states-10m.json")
+]).then(function(files) {
+
+  var states = files[1]
+
+  var earthquakes = files[0]
+
+  cScale.domain(d3.extent(earthquakes, function(d) {return Math.log(Math.max(1, d["Total Earthquakes"]))}));
+
+  var m = cScale.domain()[1];
+
+  var geo_states = topojson.feature(states, states.objects.states).features
+
+  //Legend
+  var colors = ['#fff5eb','#fee6ce','#fdd0a2','#fdae6b','#fd8d3c','#f16913','#d94801','#a63603','#7f2704'];
+
+  for (var j=0; j<9; j++) {
+    var txt = '' + Math.ceil(Math.exp(j*m/9));
+    svg.append("text")
+        .attr('x', width +30)
+        .attr('y', 50*j+20)
+        .text(txt)
+        .style("text-anchor", "left");
+    svg.append("rect")
+        .attr("x", width)
+        .attr("y", 50*j)
+        .attr("width", 30)
+        .attr("height", 50)
+        .style("fill", function() {return cScale(j*m/9)});
+  };
+
+  for (var i = 0; i < earthquakes.length; i++) {
+
+    //Get State Names
+    var quakeState = earthquakes[i].States;
+
+    var quakeRegion = earthquakes[i].Region;
+
+    //Get value
+    var quakeValue = +earthquakes[i]["Total Earthquakes"];
+
+    //match states and add values
+    for (var j = 0; j < geo_states.length; j++) {
+      var sState = geo_states[j].properties.name;
+
+
+      if (quakeState == sState) {
+        geo_states[j].properties.quakes_tot = quakeValue;
+        geo_states[j].properties.region = quakeRegion;
+
+        break;
+      }
+    }
+  }
+
+
+
+
+  svg.selectAll("path")
+      .data(geo_states)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .style("fill", function(d) {return cScale(Math.max(1, Math.log(d.properties.quakes_tot)))})
+      .style("stroke", "black")
+      .on("mouseover", tool_tip.show)
+      .on("mouseout", tool_tip.hide);
+
+
+
+});
+
+var tool_tip = d3.tip()
+      .attr('class', 'd3-tip')
+      .style("visibility","visible")
+      .offset([-20, 0])
+      .html(function(d) {
+        return "State: " + d.properties.name +
+        " <br/> Region: " + d.properties.region +
+        " <br/> Earhquakes: " + d.properties.quakes_tot;
+      });
+svg.call(tool_tip);
+
+</script>

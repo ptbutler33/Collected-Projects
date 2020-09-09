@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="../lib/d3.v5.min.js" charset="utf-8"></script>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 80, right: 25, bottom: 150, left: 50},
+  width = 900 - margin.left - margin.right,
+  height = 600 - margin.top - margin.bottom;
+
+  var parseYear = d3.timeParse("%Y");
+  var formatYear = d3.timeFormat("%Y");
+
+
+  var xScale = d3.scaleBand().rangeRound([0, width]).padding(0.05); // output
+
+  var yScale = d3.scaleBand().rangeRound([height, 0]).padding(0.05)
+
+  var cScale = d3.scaleQuantize()
+                .range(['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026'])
+
+color = function(r, v) {
+  if (r == "0 to 9") {
+    return v;
+  } else if (r == "10 to 99") {
+    return v;
+  } else {
+    return Math.sqrt(v);
+  }
+};
+
+scale = function(r, c) {
+  if (r == "0 to 9") {
+    return c;
+  } else if (r == "10 to 99") {
+    return c;
+  } else {
+    return c*c;
+  }
+};
+
+choose_range("0 to 9")
+
+
+function choose_range(r) {
+//append svg element
+    var svg = d3.select("#my_dataviz")
+    .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+    //Read the data
+    d3.csv('earthquakes.csv').then(function(data) {
+      data.forEach(function(d) {
+        d["2010"] = +d["2010"]
+        d["2011"] = +d["2011"]
+        d["2012"] = +d["2012"]
+        d["2013"] = +d["2013"]
+        d["2014"] = +d["2014"]
+        d["2015"] = +d["2015"]
+      });
+      var dataset = data.filter(function(d) {return d.Category==r});
+
+
+      var years = data.columns.filter(function(d) {
+        return d!="States"
+      }).filter(function(d) {
+        return d!="Category"
+      });
+
+      xScale.domain(dataset.map(function(d) {return d.States}));
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(xScale)) // Create an axis component with d3.axisBottom
+          .selectAll("text")
+          .attr("transform", "rotate(-45)")
+          .style("text-anchor", "end");
+
+      yScale.domain(years.reverse());
+      svg.append("g")
+          .attr("class", "y axis")
+          .call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
+
+      if (r == "0 to 9") {
+        cScale.domain([0, 9]);
+      } else if (r == "10 to 99") {
+        cScale.domain([0, 99]);
+      } else if (r == "100 to 499") {
+        cScale.domain([0,22.5]);
+      } else {
+        var max = d3.max(years, function(y) {
+          return d3.max(dataset, function(d) {
+            return d[y]
+        })});
+        cScale.domain([0, Math.sqrt(max)]);
+      };
+
+
+      //draw heat boxes
+      years.forEach(function (y) {
+          svg.selectAll()
+        .data(dataset)
+        .enter()
+        .append("rect")
+          .attr("year", y)
+          .attr("x", function(d) { return xScale(d.States) })
+          .attr("y", function(d) { return yScale(y)})
+          .attr("rx", 4)
+          .attr("ry", 4)
+          .attr("width", xScale.bandwidth())
+          .attr("height", yScale.bandwidth())
+          .style("fill", function(d) {return cScale(color(r, d[y]))})
+          .style("stroke-width", 4)
+          .style("stroke", "none")
+          .style("opacity", 1.0)
+          .on("mouseover", function(d) {
+            svg.append("text")
+                .attr('id', 'valuetxt')
+                .attr('x', width/2)
+                .attr('y', 0)
+                .text('' + d.States + " " + y + ": " + d[y])
+          })
+          .on("mouseout", function() {
+            d3.select("#valuetxt").remove()
+          })
+      });
+
+    var m = cScale.domain()[1];
+    //making Legend
+    for (var j=0; j<9; j++) {
+      var txt = '' + Math.ceil(scale(r, j*m/9))
+      svg.append("text")
+          .attr('x', 100 + 70*j)
+          .attr('y', height + 150)
+          .text(txt)
+          .style("text-anchor", "center");
+      svg.append("rect")
+          .attr("x", 100 + 70*j)
+          .attr("y", height + 100)
+          .attr("width", 70)
+          .attr("height", 30)
+          .style("fill", cScale(j*m/9));
+    };
+
+    svg.append("text")
+        .attr("transform",
+              "translate(" + (width/2) + " ," +
+                             -20 + ")")
+       .attr("font-family", "sans-serif")
+       .attr("font-weight", "bold")
+        .style("text-anchor", "middle")
+        .style("font-size", "24px")
+        .text("Visualizing Earthquake Counts by State 2010-2015");
+
+    svg.append("text")
+        .attr("transform",
+              "translate(" + (width/2) + " ," +
+                             (height + 95) + ")")
+       .attr("font-family", "sans-serif")
+       .attr("font-weight", "bold")
+        .style("text-anchor", "middle")
+        .style("font-size", "16px")
+        .text("Count");
+
+
+    });
+};
+
+
+var ranges = ["0 to 9", "10 to 99", "100 to 499", "500 or above"];
+
+var select = d3.select('body')
+  .append('select')
+  	.attr('class','select')
+    .on('change',onchange)
+
+var options = select
+  .selectAll('option')
+	.data(ranges).enter()
+	.append('option')
+		.text(function (d) { return d;});
+
+function onchange() {
+    selectValue = d3.select('select').property('value')
+    d3.selectAll("svg").remove();
+    choose_range(selectValue);
+};
+
+
+
+</script>

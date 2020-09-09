@@ -1,0 +1,1 @@
+Nonlinear and log scales can help with graph interpretability. In the case of the linecharts, the lines are more clearly separated when we use a square root or log scale, making them easier to differentiate.

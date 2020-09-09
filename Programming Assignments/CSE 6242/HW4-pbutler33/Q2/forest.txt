@@ -1,0 +1,3 @@
+1.	A single decision tree is more likely to overfit. A random forest 'averages' out many decision trees and thus gives a more robust (and generally more accurate) classification.
+2.	202 seconds
+3.	96.81% accuracy

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Lego Sets by Year from Rebrickable</title>
+
+
+    </head>
+    <script src = 'lib/d3/d3.min.js' charset="utf-8"></script>
+    <script src = 'lib/d3-dsv/d3-dsv.min.js' charset="utf-8"></script>
+    <script src = 'lib/d3-fetch/d3-fetch.min.js' charset="utf-8"></script>
+    <body>
+
+      <center><strong>Lego Sets by Year from Rebrickable</strong></center>
+
+      <script type = "text/javascript">
+
+        var margin = {top:20, right:20, bottom:30, left:40};
+        var w=960 - margin.right-margin.left;
+        var h=720 - margin.top-margin.bottom;
+        var parseYear = d3.timeParse("%Y");
+
+        var x=d3.scaleBand().rangeRound([0, w]).padding(0.05);
+
+        var y=d3.scaleLinear().range([h, 0]);
+
+        var xAxis = d3.axisBottom()
+                    .scale(x)
+                    .ticks(30);
+
+        var yAxis = d3.axisLeft()
+                    .scale(y)
+                    .ticks(15);
+
+
+
+
+        var svg = d3.select("body")
+            .append("svg")
+            .attr("width", w + margin.left + margin.right)
+            .attr("height", h + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform",
+                  "translate(" + margin.left + "," + margin.top + ")");
+
+        d3.csv("q3.csv").then(function(data) {
+          data.forEach(function(d) {
+            d.year = +d.year;
+            d.running_total= +d.running_total;
+          });
+
+        x.domain(data.map(function(d) {
+                return d.year;
+        }));
+        y.domain([0, d3.max(data, function(d) {
+                return d.running_total;
+        })]);
+
+        //make bars
+        svg.selectAll(".bar")
+            .data(data)
+          .enter().append("rect")
+            .style("fill", "steelblue")
+            .attr("class", "bar")
+            .attr("x", function(d) {return x(d.year); })
+            .attr("width", 10)
+            .attr("y", function(d) {return y(d.running_total);})
+            .attr("height", function(d) {
+              return h - y(d.running_total);
+            });
+
+          svg.append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(0," + h + ")")
+            .call(xAxis);
+
+
+          svg.append("g")
+            .attr("class", "axis")
+            .call(yAxis);
+        });
+
+
+
+          //render.__data__
+
+      </script>
+
+      <div align="right"> pbutler33 </div>
+
+    </body>
+</html>
