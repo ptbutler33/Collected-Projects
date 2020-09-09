@@ -1,2 +1,2 @@
-# Collected-Projects
-Collection of code and reports for projects at UC Berkeley and Georgia Tech
+# Collected-Schoolwork
+Collection of programming assignments and project reports from MS Analytics courses at Georgia Tech
